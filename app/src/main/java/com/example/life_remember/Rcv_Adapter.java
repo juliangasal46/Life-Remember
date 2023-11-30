@@ -46,6 +46,15 @@ public class Rcv_Adapter extends RecyclerView.Adapter<Rcv_Adapter.MyViewHolder> 
         // Number of items displayed on the recycler view
     }
 
+    public void addItem(Tarea tarea){
+        arrayTareas.add(tarea);
+        notifyItemInserted(arrayTareas.size() -1);
+    }
+
+    public void removeItem(int position){
+        arrayTareas.remove(position);
+        notifyItemRemoved(position);
+    }
 
     public static class MyViewHolder extends RecyclerView.ViewHolder{
 
@@ -59,8 +68,6 @@ public class Rcv_Adapter extends RecyclerView.Adapter<Rcv_Adapter.MyViewHolder> 
             tvTitulo = itemView.findViewById(R.id.tvTitulo);
             tvDescripcion = itemView.findViewById(R.id.tvTexto);
             tvRecordatorio = itemView.findViewById(R.id.tvRecordatorio);
-
-
         }
     }
 }
