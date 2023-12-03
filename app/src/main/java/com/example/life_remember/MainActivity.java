@@ -12,6 +12,7 @@ import android.Manifest;
 import android.app.Activity;
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.graphics.Paint;
 import android.os.Build;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -20,7 +21,10 @@ import android.widget.CalendarView;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.TimePicker;
 import android.widget.Toast;
+
+import org.w3c.dom.Text;
 
 import java.io.*;
 import java.text.SimpleDateFormat;
@@ -93,7 +97,70 @@ public class MainActivity extends AppCompatActivity {
 
                                 alertDialogBuilder3.setPositiveButton("Siguiente", (dialog3, which3) -> {
 
+                                    // Quiere decir que no ha cambiado la fecha, es la del día actual
 
+                                    String fechaActual = etFechaActualSistema.getText().toString();
+
+                                    AlertDialog.Builder alertDialogBuilder4 = new AlertDialog.Builder(MainActivity.this);
+                                    LayoutInflater inflater4 = getLayoutInflater();
+                                    View dialogLayout4 = inflater4.inflate(R.layout.alert_newchore_hora, null);
+
+                                    alertDialogBuilder4.setPositiveButton("Ir a confirmación", (dialog4, which4) -> {
+
+                                        TimePicker tpTimePicker = dialogLayout4.findViewById(R.id.tpTimePicker);
+                                        int hora = tpTimePicker.getHour();
+                                        int minutos = tpTimePicker.getMinute();
+                                        String formatoHora = hora + ":" + minutos;
+
+                                        Toast.makeText(MainActivity.this, formatoHora, Toast.LENGTH_SHORT).show();
+
+                                        // Por último, antes de guardar los datos, lanzaremos un diálogo de confirmación para
+                                        // el usuario , diga si quiere guardar o modificarlo de nuevo
+
+                                        AlertDialog.Builder alertDialogBuilder5 = new AlertDialog.Builder(MainActivity.this);
+                                        LayoutInflater inflater5 = getLayoutInflater();
+                                        View dialogLayout5 = inflater5.inflate(R.layout.alert_confirm_new_chore_dialog, null);
+
+                                        ArrayList<TextView> arrayTextViews = new ArrayList<>();
+                                        arrayTextViews.add(dialogLayout5.findViewById(R.id.tvSubrayar1));
+                                        arrayTextViews.add(dialogLayout5.findViewById(R.id.tvSubrayar2));
+                                        arrayTextViews.add(dialogLayout5.findViewById(R.id.tvSubrayar3));
+                                        arrayTextViews.add(dialogLayout5.findViewById(R.id.tvSubrayar4));
+
+                                        for(TextView tv : arrayTextViews){
+                                            tv.setPaintFlags(Paint.UNDERLINE_TEXT_FLAG);
+                                        }
+
+                                        // Enseñamos los datos que hemos ido guardando
+                                        TextView confirmTitulo = dialogLayout5.findViewById(R.id.etConfirmTitulo);
+                                        TextView confirmDesc = dialogLayout5.findViewById(R.id.etConfirmDescripcion);
+                                        TextView confirmFecha = dialogLayout5.findViewById(R.id.etConfirmFecha);
+                                        TextView confirmHora = dialogLayout5.findViewById(R.id.etConfirmHora);
+
+                                        Tarea tareaNueva = new Tarea(titulo, descripcion, fechaActual + " - "+ formatoHora);
+                                        confirmTitulo.setText(titulo);
+                                        confirmDesc.setText(descripcion);
+                                        confirmFecha.setText(fechaActual);
+                                        confirmHora.setText(formatoHora);
+
+
+                                        alertDialogBuilder5.setPositiveButton("Finalizar", (dialog5, which5) -> {
+                                            // Guardar datos
+                                            adaptadorTareas.addItem(tareaNueva);
+                                            escribirRecordatorios(tareaNueva);
+                                        });
+
+                                        alertDialogBuilder5.setNegativeButton("Cancelar", (dialog5, which5) -> {
+                                        });
+                                        alertDialogBuilder5.setView(dialogLayout5);
+                                        alertDialogBuilder5.show();
+                                    });
+
+
+                                    alertDialogBuilder4.setNegativeButton("Cancelar", (dialog4, which4) -> {
+                                    });
+                                    alertDialogBuilder4.setView(dialogLayout4);
+                                    alertDialogBuilder4.show();
                                 });
 
 
@@ -249,6 +316,6 @@ public class MainActivity extends AppCompatActivity {
 
 
     public void eliminarRecordatorios() {
-
+        
     }
 }
