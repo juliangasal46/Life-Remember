@@ -137,7 +137,7 @@ public class MainActivity extends AppCompatActivity {
                                         TextView confirmFecha = dialogLayout5.findViewById(R.id.etConfirmFecha);
                                         TextView confirmHora = dialogLayout5.findViewById(R.id.etConfirmHora);
 
-                                        Tarea tareaNueva = new Tarea(titulo, descripcion, fechaActual + " - "+ formatoHora);
+                                        Tarea tareaNueva = new Tarea(titulo, descripcion, fechaActual + "-"+ formatoHora);
                                         confirmTitulo.setText(titulo);
                                         confirmDesc.setText(descripcion);
                                         confirmFecha.setText(fechaActual);
@@ -210,6 +210,8 @@ public class MainActivity extends AppCompatActivity {
                 if (position != RecyclerView.NO_POSITION) {
                     Tarea tareaEliminada = arrayTareas.get(position);
 
+                    eliminarRecordatorios(tareaEliminada);
+
                     // Elimina el elemento del adaptador y actualiza la vista
                     adaptadorTareas.removeItem(position);
                 }
@@ -265,8 +267,6 @@ public class MainActivity extends AppCompatActivity {
 
                     arrayTareas.add(new Tarea(tareaSpliteada[0], tareaSpliteada[1], tareaSpliteada[2]));
                     // Hacer split por seccion
-
-                    // guardarLineas = guardarLineas + linea + "\n";
                     Toast.makeText(getApplicationContext(), guardarLineas + "\n", Toast.LENGTH_SHORT).show();
                     linea = br.readLine();
                 }
@@ -303,7 +303,6 @@ public class MainActivity extends AppCompatActivity {
                 OutputStreamWriter osw = new OutputStreamWriter(fos);
                 osw.write("\n");
                 osw.write(nuevaTarea.getTitulo() + "_" + nuevaTarea.getDescipcion() + "_" + nuevaTarea.getTiempo_recuerdo());
-                Toast.makeText(this, nuevaTarea.getTitulo() + "_" + nuevaTarea.getDescipcion() + "_" + nuevaTarea.getTiempo_recuerdo() , Toast.LENGTH_SHORT).show();
                 osw.flush();
                 osw.close();
             }
@@ -315,7 +314,53 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-    public void eliminarRecordatorios() {
+    public void eliminarRecordatorios(Tarea tarea) {
+
+        String cadenaBuscarEnFichero = tarea.getTitulo() + "_" +
+                tarea.getDescipcion() + "_" +
+                tarea.getTiempo_recuerdo();
+
+        Toast.makeText(MainActivity.this, cadenaBuscarEnFichero, Toast.LENGTH_SHORT).show();
+
+        try{
+            // Primero leer el fichero, cuando lea línea se queda
+                FileInputStream fis = openFileInput("bbdd_almacenar_tareas.txt");
+                InputStreamReader isr = new InputStreamReader(fis);
+                BufferedReader bufrd = new BufferedReader(isr);
+
+                StringBuilder stblr = new StringBuilder();
+                String line;
+
+                // Ahora string buider tiene el contenido del fichero
+                // Buscaremos la línea que queremos borrar y no la meterá en el string builder
+                while((line = bufrd.readLine()) != null){
+                    if(line.equals(cadenaBuscarEnFichero)){
+                        Toast.makeText(this, line + " = " + cadenaBuscarEnFichero, Toast.LENGTH_SHORT).show();
+                    } else {
+                        stblr.append(line).append("\n"); // el segundo appen da guerra
+                    }
+                }
+
+                stblr.setLength(stblr.length() -1); // Le quitamos 1 que sería el salto de línea que mete
+
+                // Ahora tenemos el contenido actualizado con la línea eliminada no escrita
+                // Tenemos que actualizar el contenido
+                FileOutputStream fos = openFileOutput("bbdd_almacenar_tareas.txt", Context.MODE_PRIVATE);
+                OutputStreamWriter osw = new OutputStreamWriter(fos);
+                osw.write(""); // Con esto borramos lo que tenga
+                // Escribimos el contenido nuevo
+                String contenidoArchivo = stblr.toString();
+                osw.write(contenidoArchivo);
+                osw.flush();
+                osw.close();
+
+            bufrd.close();
+            isr.close();
+            fis.close();
+            }
         
+        catch (IOException e) {
+            Toast.makeText(MainActivity.this, e.toString(), Toast.LENGTH_SHORT).show();
+        }
     }
 }
