@@ -12,12 +12,14 @@
         android:layout_height="wrap_content"
         android:orientation="vertical">
 
-        <CalendarView
-            android:id="@+id/vwCalendar"
+        <DatePicker
+            android:id="@+id/vwDatePicker"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
+            android:layout_height="wrap_content"
             android:layout_marginLeft="20dp"
-            android:layout_marginRight="20dp"/>
+            android:layout_marginRight="20dp"
+            android:datePickerMode="spinner"
+            android:spinnersShown="false" />
 
         <FrameLayout
             android:layout_width="match_parent"

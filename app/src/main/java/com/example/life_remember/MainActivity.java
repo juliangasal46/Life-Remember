@@ -18,6 +18,7 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.CalendarView;
+import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -322,44 +323,47 @@ public class MainActivity extends AppCompatActivity {
 
         Toast.makeText(MainActivity.this, cadenaBuscarEnFichero, Toast.LENGTH_SHORT).show();
 
-        try{
-            // Primero leer el fichero, cuando lea línea se queda
-                FileInputStream fis = openFileInput("bbdd_almacenar_tareas.txt");
-                InputStreamReader isr = new InputStreamReader(fis);
-                BufferedReader bufrd = new BufferedReader(isr);
+        try {
+            FileInputStream fis = openFileInput("bbdd_almacenar_tareas.txt");
+            InputStreamReader isr = new InputStreamReader(fis);
+            BufferedReader bufrd = new BufferedReader(isr);
 
-                StringBuilder stblr = new StringBuilder();
-                String line;
+            File tempFile = new File(getFilesDir(), "temp_bbdd_almacenar_tareas.txt");
+            FileWriter fw = new FileWriter(tempFile);
+            BufferedWriter bw = new BufferedWriter(fw);
 
-                // Ahora string buider tiene el contenido del fichero
-                // Buscaremos la línea que queremos borrar y no la meterá en el string builder
-                while((line = bufrd.readLine()) != null){
-                    if(line.equals(cadenaBuscarEnFichero)){
-                        Toast.makeText(this, line + " = " + cadenaBuscarEnFichero, Toast.LENGTH_SHORT).show();
-                    } else {
-                        stblr.append(line).append("\n"); // el segundo appen da guerra
-                    }
+            StringBuilder stblr = new StringBuilder();
+            String line;
+
+            while ((line = bufrd.readLine()) != null) {
+                if (!line.equals(cadenaBuscarEnFichero)) {
+                    stblr.append(line).append("\n"); // el segundo appen da guerra
+
+                } else {
+                    Toast.makeText(this, line + " = " + cadenaBuscarEnFichero, Toast.LENGTH_SHORT).show();
                 }
+            }
 
-                stblr.setLength(stblr.length() -1); // Le quitamos 1 que sería el salto de línea que mete
+            stblr.setLength(stblr.length() -1); // Le quitamos 1 que sería el salto de línea que mete
 
-                // Ahora tenemos el contenido actualizado con la línea eliminada no escrita
-                // Tenemos que actualizar el contenido
-                FileOutputStream fos = openFileOutput("bbdd_almacenar_tareas.txt", Context.MODE_PRIVATE);
-                OutputStreamWriter osw = new OutputStreamWriter(fos);
-                osw.write(""); // Con esto borramos lo que tenga
-                // Escribimos el contenido nuevo
-                String contenidoArchivo = stblr.toString();
-                osw.write(contenidoArchivo);
-                osw.flush();
-                osw.close();
+            bw.write(stblr.toString());
 
             bufrd.close();
             isr.close();
             fis.close();
-            }
-        
-        catch (IOException e) {
+
+            bw.flush();
+            bw.close();
+            fw.close();
+
+            // Eliminamos el archivo original
+            File originalFile = getFileStreamPath("bbdd_almacenar_tareas.txt");
+            originalFile.delete();
+
+            // Renombramos el archivo temporal al nombre original
+            tempFile.renameTo(originalFile);
+
+        } catch (IOException e) {
             Toast.makeText(MainActivity.this, e.toString(), Toast.LENGTH_SHORT).show();
         }
     }
