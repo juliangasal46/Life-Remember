@@ -56,6 +56,11 @@ public class Rcv_Adapter extends RecyclerView.Adapter<Rcv_Adapter.MyViewHolder> 
         notifyItemRemoved(position);
     }
 
+    public void remoteAllItems(){
+        arrayTareas.clear();
+        notifyDataSetChanged();
+    }
+
     public static class MyViewHolder extends RecyclerView.ViewHolder{
 
         // Grab all the views / elements for the recycler view

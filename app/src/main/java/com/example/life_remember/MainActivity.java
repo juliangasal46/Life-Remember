@@ -36,12 +36,15 @@ import java.util.Date;
 public class MainActivity extends AppCompatActivity {
 
     private ImageView btnAddRecordatorio;
+    private DatePicker datePicker;
     ArrayList<Tarea> arrayTareas = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        datePicker = findViewById(R.id.vwDatePicker);
 
         // Si el usuario quiere añadir una tarea, estas se borran
 
@@ -94,7 +97,7 @@ public class MainActivity extends AppCompatActivity {
                                 View dialogLayout3 = inflater3.inflate(R.layout.alert_newchore_fecha, null);
 
                                 TextView etFechaActualSistema = dialogLayout3.findViewById(R.id.etFechaPorDefecto);
-                                etFechaActualSistema.setText(cogerFechaActual());
+                                etFechaActualSistema.setText(cogerFechaActual(datePicker));
 
                                 alertDialogBuilder3.setPositiveButton("Siguiente", (dialog3, which3) -> {
 
@@ -194,6 +197,21 @@ public class MainActivity extends AppCompatActivity {
         });
 
 
+        // Cuando cambie la fecha el usuario que hacemos
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            datePicker.setOnDateChangedListener(new DatePicker.OnDateChangedListener() {
+                @Override
+                public void onDateChanged(DatePicker view, int year, int monthOfYear, int dayOfMonth) {
+
+                    adaptadorTareas.remoteAllItems(); // Vaciamos array y por ende los recycler view elements
+
+                    leerFicheros(); // Este ya tiene el filtrado por fecha
+                }
+            });
+        } else{
+            Toast.makeText(this, "Tu android es muy antiguo, no se puede ejecutar el cambio de fecha", Toast.LENGTH_SHORT).show();
+        }
+
 
         ItemTouchHelper.SimpleCallback itemTouchCallback = new ItemTouchHelper.SimpleCallback(
                 0, ItemTouchHelper.LEFT | ItemTouchHelper.RIGHT) {
@@ -224,14 +242,16 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-    private String cogerFechaActual(){
+    private String cogerFechaActual(DatePicker datepicker){
 
-        Calendar calendar = Calendar.getInstance();
-        Date fechaActual = calendar.getTime();
-        SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
-        String fechaFormateada = dateFormat.format(fechaActual);
-        Toast.makeText(this, "Fecha actual del sistema: " + fechaFormateada, Toast.LENGTH_SHORT).show();
+        // Coger fecha del picker
+        int day = datePicker.getDayOfMonth();
+        int month = datePicker.getMonth();
+        int year =  datePicker.getYear();
 
+        String fechaFormateada = day + "/" + (month+1) + "/" + year;
+
+        Toast.makeText(this, "Fecha actual del calendario: " + fechaFormateada, Toast.LENGTH_SHORT).show();
         return fechaFormateada;
     }
 
@@ -259,6 +279,7 @@ public class MainActivity extends AppCompatActivity {
 
                 String guardarLineas = "";
                 String []tareaSpliteada;
+                String[] fechaSpliteada; // Porque ahora es -> fecha-hora
 
                 // Mientras que haya algo que leer en la línea -> Sigue
                 while (linea != null) {
@@ -266,9 +287,15 @@ public class MainActivity extends AppCompatActivity {
                     guardarLineas = linea;
                     tareaSpliteada = guardarLineas.split("_");
 
-                    arrayTareas.add(new Tarea(tareaSpliteada[0], tareaSpliteada[1], tareaSpliteada[2]));
-                    // Hacer split por seccion
-                    Toast.makeText(getApplicationContext(), guardarLineas + "\n", Toast.LENGTH_SHORT).show();
+
+                    // Hacer aquí el filtrado por fecha
+                    fechaSpliteada = tareaSpliteada[2].split("-");
+
+                    if(cogerFechaActual(datePicker).equals(fechaSpliteada[0])){
+                        arrayTareas.add(new Tarea(tareaSpliteada[0], tareaSpliteada[1], tareaSpliteada[2]));
+                        // Hacer split por seccion
+                    }
+
                     linea = br.readLine();
                 }
 
