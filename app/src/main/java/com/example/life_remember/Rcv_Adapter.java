@@ -11,10 +11,11 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.ArrayList;
 
-public class Rcv_Adapter extends RecyclerView.Adapter<Rcv_Adapter.MyViewHolder> {
+public class Rcv_Adapter extends RecyclerView.Adapter<Rcv_Adapter.MyViewHolder> implements View.OnLongClickListener {
 
     Context context;
     ArrayList<Tarea> arrayTareas;
+    private View.OnLongClickListener listener;
 
     public Rcv_Adapter(Context context, ArrayList<Tarea> arrayTareas){
         this.context = context;
@@ -27,6 +28,8 @@ public class Rcv_Adapter extends RecyclerView.Adapter<Rcv_Adapter.MyViewHolder> 
         // This is where you inflate the layout and inflate rows
         LayoutInflater inflater = LayoutInflater.from(context);
         View view = inflater.inflate(R.layout.recycler_view_layout, parent, false);
+
+        view.setOnLongClickListener(this);
 
         return new Rcv_Adapter.MyViewHolder(view);
     }
@@ -46,6 +49,10 @@ public class Rcv_Adapter extends RecyclerView.Adapter<Rcv_Adapter.MyViewHolder> 
         // Number of items displayed on the recycler view
     }
 
+    public Tarea getItemDesdeRecyclerView(int position){
+        return arrayTareas.get(position);
+    }
+
     public void addItem(Tarea tarea){
         arrayTareas.add(tarea);
         notifyItemInserted(arrayTareas.size() -1);
@@ -59,6 +66,20 @@ public class Rcv_Adapter extends RecyclerView.Adapter<Rcv_Adapter.MyViewHolder> 
     public void remoteAllItems(){
         arrayTareas.clear();
         notifyDataSetChanged();
+    }
+
+    @Override
+    public boolean onLongClick(View v) {
+        if(listener != null){
+            listener.onLongClick(v); // Check if listener is not null
+            return true;
+        } else{
+            return false;
+        }
+    }
+
+    public void setOnLongClickListener(View.OnLongClickListener listener){
+        this.listener = listener;
     }
 
     public static class MyViewHolder extends RecyclerView.ViewHolder{
