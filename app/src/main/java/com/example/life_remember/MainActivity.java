@@ -3,13 +3,17 @@ package com.example.life_remember;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
+import androidx.core.app.NotificationCompat;
+import androidx.core.app.NotificationManagerCompat;
 import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.Manifest;
 import android.app.Activity;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -19,7 +23,6 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
-import android.widget.CalendarView;
 import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -27,13 +30,9 @@ import android.widget.TextView;
 import android.widget.TimePicker;
 import android.widget.Toast;
 
-import org.w3c.dom.Text;
-
 import java.io.*;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
+
 
 public class MainActivity extends AppCompatActivity {
 
@@ -50,8 +49,7 @@ public class MainActivity extends AppCompatActivity {
 
         datePicker = findViewById(R.id.vwDatePicker);
 
-        // Si el usuario quiere añadir una tarea, estas se borran
-
+        createChannel();
         leerFicheros();
 
         // Ahora tenemos que pasarle los datos al recycler view
@@ -80,6 +78,10 @@ public class MainActivity extends AppCompatActivity {
                 String fecha_edit = adaptadorTareas.getItemDesdeRecyclerView(posSeleccionada).getTiempo_recuerdo().split("-")[0];
                 String hora_edit = adaptadorTareas.getItemDesdeRecyclerView(posSeleccionada).getTiempo_recuerdo().split("-")[1];
 
+                // Esta luego se usará cuando vayamos a escribir los cambios en el fichero
+                String tiempo_recuerdo = fecha_edit + "-" + hora_edit;
+                Tarea tarea_a_editar = new Tarea(titulo_edit, descrip_edit, tiempo_recuerdo);
+
                 editTitulo.setText(titulo_edit);
                 editDescripcion.setText(descrip_edit);
                 editFecha.setText(fecha_edit);
@@ -95,9 +97,7 @@ public class MainActivity extends AppCompatActivity {
                         DatePicker vwDatePicker_SelectNewFecha = dialogLayoutEditFecha.findViewById(R.id.vwDatePicker_SelectNewFecha);
                         TextView tvNewFecha = dialogLayoutEditFecha.findViewById(R.id.tvNewFecha);
 
-                        // Por algún motivo no funciona el método
-                        // TODO: Ver porque no funciona el cogerFechaActual
-                        int mes = vwDatePicker_SelectNewFecha.getMonth()+1;
+                        int mes = vwDatePicker_SelectNewFecha.getMonth() + 1;
 
                         fechaEditada = vwDatePicker_SelectNewFecha.getDayOfMonth() + "/"
                                 + mes + "/" + vwDatePicker_SelectNewFecha.getYear();
@@ -109,9 +109,9 @@ public class MainActivity extends AppCompatActivity {
                                 @Override
                                 public void onDateChanged(DatePicker view, int year, int monthOfYear, int dayOfMonth) {
 
-                                    monthOfYear = monthOfYear+1;
+                                    monthOfYear = monthOfYear + 1;
 
-                                    fechaEditada =  dayOfMonth + "/" +
+                                    fechaEditada = dayOfMonth + "/" +
                                             monthOfYear + "/" +
                                             year;
 
@@ -126,7 +126,8 @@ public class MainActivity extends AppCompatActivity {
                             editFecha.setText(fechaEditada);
                         });
 
-                        alertEditFecha.setNegativeButton("Cancelar", (dialog5, which5) -> {});
+                        alertEditFecha.setNegativeButton("Cancelar", (dialog5, which5) -> {
+                        });
 
                         alertEditFecha.setView(dialogLayoutEditFecha);
                         alertEditFecha.show();
@@ -153,22 +154,26 @@ public class MainActivity extends AppCompatActivity {
                             newEditHora.setText(formatoHora);
                         });
 
-                        alertEditHora.setNegativeButton("Cancelar", (dialog5, which5) -> {});
+                        alertEditHora.setNegativeButton("Cancelar", (dialog5, which5) -> {
+                        });
                         alertEditHora.setView(dialogLayoutEditHora);
                         alertEditHora.show();
                     }
                 });
 
-                alertDialogBuilder_edit_chore.setPositiveButton("Guardar cambios", (dialogedit, whichedit) ->{
+                alertDialogBuilder_edit_chore.setPositiveButton("Guardar cambios", (dialogedit, whichedit) -> {
 
-                    // Reescribir fichero ? = ci mismo metodo
                     // Para editar lo que haremos es = Coger la tarea actual, eliminarla del fichero y escribirla nueva <= Re usarndo funciones
+                    String formato_fecha_hora_editada = editFecha.getText().toString() + "-" + editHora.getText().toString();
+                    Tarea tarea_nueva_editada = new Tarea(editTitulo.getText().toString(), editDescripcion.getText().toString(), formato_fecha_hora_editada);
 
-
-
+                    editRecordatorios(tarea_a_editar, tarea_nueva_editada);
+                    adaptadorTareas.remoteAllItems(); // Vaciamos array y por ende los recycler view elements
+                    leerFicheros(); // Este ya tiene el filtrado por fecha
                 });
 
-                alertDialogBuilder_edit_chore.setNegativeButton("Cancelar", (dialogedit, whichedit) -> {});
+                alertDialogBuilder_edit_chore.setNegativeButton("Cancelar", (dialogedit, whichedit) -> {
+                });
 
                 alertDialogBuilder_edit_chore.setView(dialogLayout_edit_chore);
                 alertDialogBuilder_edit_chore.show();
@@ -177,7 +182,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        btnAddRecordatorio = findViewById(R.id.imgSettings); // Pulsable
+        btnAddRecordatorio = findViewById(R.id.imgSettings);
         btnAbrirTodasTareas = findViewById(R.id.imgAllChores);
 
         // OPTIMIZAR MÁS ADELANTE, SE PUEDE HACER DE OTRA FORMAS MEJOR
@@ -239,9 +244,9 @@ public class MainActivity extends AppCompatActivity {
                                                 @Override
                                                 public void onDateChanged(DatePicker view, int year, int monthOfYear, int dayOfMonth) {
 
-                                                    monthOfYear = monthOfYear+1;
+                                                    monthOfYear = monthOfYear + 1;
 
-                                                    fechaModificada =  dayOfMonth + "/" +
+                                                    fechaModificada = dayOfMonth + "/" +
                                                             monthOfYear + "/" +
                                                             year;
 
@@ -258,7 +263,8 @@ public class MainActivity extends AppCompatActivity {
                                             etFechaActualSistema.setText(fechaModificada); // Si termina bien que actualice la fecha que se va a meter de forma final
                                         });
 
-                                        alertDialogSelectFecha.setNegativeButton("Cancelar", (dialog5, which5) -> {});
+                                        alertDialogSelectFecha.setNegativeButton("Cancelar", (dialog5, which5) -> {
+                                        });
 
                                         alertDialogSelectFecha.setView(dialogLayoutSelectFecha);
                                         alertDialogSelectFecha.show();
@@ -298,7 +304,7 @@ public class MainActivity extends AppCompatActivity {
                                         arrayTextViews.add(dialogLayout5.findViewById(R.id.tvSubrayar3));
                                         arrayTextViews.add(dialogLayout5.findViewById(R.id.tvSubrayar4));
 
-                                        for(TextView tv : arrayTextViews){
+                                        for (TextView tv : arrayTextViews) {
                                             tv.setPaintFlags(Paint.UNDERLINE_TEXT_FLAG);
                                         }
 
@@ -308,7 +314,7 @@ public class MainActivity extends AppCompatActivity {
                                         TextView confirmFecha = dialogLayout5.findViewById(R.id.etConfirmFecha);
                                         TextView confirmHora = dialogLayout5.findViewById(R.id.etConfirmHora);
 
-                                        Tarea tareaNueva = new Tarea(titulo, descripcion, fechaActual + "-"+ formatoHora);
+                                        Tarea tareaNueva = new Tarea(titulo, descripcion, fechaActual + "-" + formatoHora);
                                         confirmTitulo.setText(titulo);
                                         confirmDesc.setText(descripcion);
                                         confirmFecha.setText(fechaActual);
@@ -379,13 +385,11 @@ public class MainActivity extends AppCompatActivity {
             datePicker.setOnDateChangedListener(new DatePicker.OnDateChangedListener() {
                 @Override
                 public void onDateChanged(DatePicker view, int year, int monthOfYear, int dayOfMonth) {
-
                     adaptadorTareas.remoteAllItems(); // Vaciamos array y por ende los recycler view elements
-
                     leerFicheros(); // Este ya tiene el filtrado por fecha
                 }
             });
-        } else{
+        } else {
             Toast.makeText(this, "Tu android es muy antiguo, no se puede ejecutar el cambio de fecha", Toast.LENGTH_SHORT).show();
         }
 
@@ -413,20 +417,19 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         };
-
         ItemTouchHelper itemTouchHelper = new ItemTouchHelper(itemTouchCallback);
         itemTouchHelper.attachToRecyclerView(recyclerView);
     }
 
 
-    private String cogerFechaActual(DatePicker datepicker){
+    private String cogerFechaActual(DatePicker datepicker) {
 
         // Coger fecha del picker
         int day = datePicker.getDayOfMonth();
         int month = datePicker.getMonth();
-        int year =  datePicker.getYear();
+        int year = datePicker.getYear();
 
-        String fechaFormateada = day + "/" + (month+1) + "/" + year;
+        String fechaFormateada = day + "/" + (month + 1) + "/" + year;
 
         return fechaFormateada;
     }
@@ -440,7 +443,7 @@ public class MainActivity extends AppCompatActivity {
         return false;
     }
 
-     private void leerFicheros() {
+    private void leerFicheros() {
         String[] archivos = fileList(); // Lista con todos los fichers
 
         if (chequearExistenciaFichero(archivos, "bbdd_almacenar_tareas.txt")) {
@@ -453,7 +456,7 @@ public class MainActivity extends AppCompatActivity {
                 String linea = br.readLine();
 
                 String guardarLineas = "";
-                String []tareaSpliteada;
+                String[] tareaSpliteada;
                 String[] fechaSpliteada; // Porque ahora es -> fecha-hora
 
                 // Mientras que haya algo que leer en la línea -> Sigue
@@ -465,7 +468,7 @@ public class MainActivity extends AppCompatActivity {
                     // Hacer aquí el filtrado por fecha
                     fechaSpliteada = tareaSpliteada[2].split("-");
 
-                    if(cogerFechaActual(datePicker).equals(fechaSpliteada[0])){
+                    if (cogerFechaActual(datePicker).equals(fechaSpliteada[0])) {
                         arrayTareas.add(new Tarea(tareaSpliteada[0], tareaSpliteada[1], tareaSpliteada[2]));
                         // Hacer split por seccion
                     }
@@ -497,7 +500,6 @@ public class MainActivity extends AppCompatActivity {
                 // Mode private es para que solo esta función pueda acceder a ese fichero de forma escritura
                 OutputStreamWriter osw = new OutputStreamWriter(openFileOutput("bbdd_almacenar_tareas.txt", Activity.MODE_PRIVATE));
                 osw.write(nuevaTarea.getTitulo() + "_" + nuevaTarea.getDescipcion() + "_" + nuevaTarea.getTiempo_recuerdo());
-                Toast.makeText(this, nuevaTarea.getTitulo() + "_" + nuevaTarea.getDescipcion() + "_" + nuevaTarea.getTiempo_recuerdo() , Toast.LENGTH_SHORT).show();
                 osw.flush();
                 osw.close();
             } else {
@@ -522,8 +524,6 @@ public class MainActivity extends AppCompatActivity {
                 tarea.getDescipcion() + "_" +
                 tarea.getTiempo_recuerdo();
 
-        Toast.makeText(MainActivity.this, cadenaBuscarEnFichero, Toast.LENGTH_SHORT).show();
-
         try {
             FileInputStream fis = openFileInput("bbdd_almacenar_tareas.txt");
             InputStreamReader isr = new InputStreamReader(fis);
@@ -545,7 +545,7 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
 
-            stblr.setLength(stblr.length() -1); // Le quitamos 1 que sería el salto de línea que mete
+            stblr.setLength(stblr.length() - 1); // Le quitamos 1 que sería el salto de línea que mete
 
             bw.write(stblr.toString());
 
@@ -566,6 +566,72 @@ public class MainActivity extends AppCompatActivity {
 
         } catch (IOException e) {
             Toast.makeText(MainActivity.this, e.toString(), Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void editRecordatorios(Tarea tareaAntigua, Tarea tareaEditada) {
+
+        if ((tareaAntigua.getTitulo().equals(tareaEditada.getTitulo()))
+                && (tareaAntigua.getDescipcion().equals(tareaEditada.getDescipcion()))
+                && (tareaAntigua.getTiempo_recuerdo().equals(tareaEditada.getTiempo_recuerdo()))) {
+            // Todas son iguales no guardes nada
+            Toast.makeText(this, "No se han hecho cambios, tiene los mismos campos", Toast.LENGTH_SHORT).show();
+        } else {
+            Toast.makeText(this, "Cambios realizados con éxito", Toast.LENGTH_SHORT).show();
+            escribirRecordatorios(tareaEditada);
+            eliminarRecordatorios(tareaAntigua);
+        }
+    }
+
+    private static final int NOTIFICATION_ID = 1;
+    public static final String MY_CHANNEL_ID = "myChannel";
+
+    private void createChannel() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            NotificationChannel channel = new NotificationChannel(
+                    MY_CHANNEL_ID,
+                    "MySuperChannel",
+                    NotificationManager.IMPORTANCE_DEFAULT
+            );
+            channel.setDescription("SUSCRIBETE");
+
+            NotificationManager notificationManager =
+                    (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+
+            notificationManager.createNotificationChannel(channel);
+        }
+    }
+
+    private void createSimpleNotification(String titulo, String descripcion) {
+        Intent intent = new Intent(this, MainActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+
+        int flag = (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) ?
+                PendingIntent.FLAG_IMMUTABLE : 0;
+
+        PendingIntent pendingIntent =
+                PendingIntent.getActivity(this, 0, intent, flag);
+
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(this, MY_CHANNEL_ID)
+                .setSmallIcon(R.drawable.ic_launcher_background) // Cambia a tu propio recurso de icono
+                .setContentTitle("¡¡ Tienes una tarea que hacer hoy !!")
+                .setContentText(titulo)
+                .setStyle(new NotificationCompat.BigTextStyle()
+                        .bigText(descripcion))
+                .setContentIntent(pendingIntent)
+                .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+                .setAutoCancel(true); // Cierra la notificación al hacer clic en ella
+
+        NotificationManagerCompat notificationManager = NotificationManagerCompat.from(this);
+
+        // Verificar permisos en tiempo de ejecución
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) !=
+                PackageManager.PERMISSION_GRANTED) {
+            // Solicitar permisos en tiempo de ejecución si no están otorgados
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.POST_NOTIFICATIONS}, 1);
+        } else {
+            // Mostrar la notificación
+            notificationManager.notify(NOTIFICATION_ID, builder.build());
         }
     }
 }
