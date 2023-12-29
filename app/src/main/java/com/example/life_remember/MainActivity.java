@@ -57,6 +57,7 @@ public class MainActivity extends AppCompatActivity {
         recyclerView.setAdapter(adaptadorTareas);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
+        // TODO: Esta zona es la de editado de la tarea
         adaptadorTareas.setOnLongClickListener(new View.OnLongClickListener() {
             @Override
             public boolean onLongClick(View v) {
@@ -149,8 +150,9 @@ public class MainActivity extends AppCompatActivity {
                             int hora_edit = tpTimePicker_edit.getHour();
                             int minutos_edit = tpTimePicker_edit.getMinute();
                             String formatoHora = hora_edit + ":" + minutos_edit;
+                            String formatoHora_chequeado = ceroIzquierda(formatoHora);
 
-                            newEditHora.setText(formatoHora);
+                            newEditHora.setText(formatoHora_chequeado);
                         });
 
                         alertEditHora.setNegativeButton("Cancelar", (dialog5, which5) -> {
@@ -184,8 +186,7 @@ public class MainActivity extends AppCompatActivity {
         btnAddRecordatorio = findViewById(R.id.imgSettings);
         btnAbrirTodasTareas = findViewById(R.id.imgAllChores);
 
-        // OPTIMIZAR MÁS ADELANTE, SE PUEDE HACER DE OTRA FORMAS MEJOR
-
+        // TODO: Esta zona es la de creación de la tarea
         btnAddRecordatorio.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -200,7 +201,7 @@ public class MainActivity extends AppCompatActivity {
 
                 alertDialogBuilder.setPositiveButton("Siguiente", (dialog, which) -> {
 
-                    // guardar datos que lleguen en shared preffereneces
+                    // guardar datos que lleguen en shared preferences
                     // lanzar siguiente alert dialog
                     if (etTitulo.getText().length() > 0) {
 
@@ -287,8 +288,9 @@ public class MainActivity extends AppCompatActivity {
                                         int hora = tpTimePicker.getHour();
                                         int minutos = tpTimePicker.getMinute();
                                         String formatoHora = hora + ":" + minutos;
+                                        String hora_chequeada_ceros = ceroIzquierda(formatoHora);
 
-                                        Toast.makeText(MainActivity.this, formatoHora, Toast.LENGTH_SHORT).show();
+                                        Toast.makeText(MainActivity.this, hora_chequeada_ceros, Toast.LENGTH_SHORT).show();
 
                                         // Por último, antes de guardar los datos, lanzaremos un diálogo de confirmación para
                                         // el usuario , diga si quiere guardar o modificarlo de nuevo
@@ -313,11 +315,11 @@ public class MainActivity extends AppCompatActivity {
                                         TextView confirmFecha = dialogLayout5.findViewById(R.id.etConfirmFecha);
                                         TextView confirmHora = dialogLayout5.findViewById(R.id.etConfirmHora);
 
-                                        Tarea tareaNueva = new Tarea(titulo, descripcion, fechaActual + "-" + formatoHora);
+                                        Tarea tareaNueva = new Tarea(titulo, descripcion, fechaActual + "-" + hora_chequeada_ceros);
                                         confirmTitulo.setText(titulo);
                                         confirmDesc.setText(descripcion);
                                         confirmFecha.setText(fechaActual);
-                                        confirmHora.setText(formatoHora);
+                                        confirmHora.setText(hora_chequeada_ceros);
 
                                         alertDialogBuilder5.setPositiveButton("Finalizar", (dialog5, which5) -> {
                                             // Guardar datos
@@ -582,5 +584,28 @@ public class MainActivity extends AppCompatActivity {
             escribirRecordatorios(tareaEditada);
             eliminarRecordatorios(tareaAntigua);
         }
+    }
+
+    public String ceroIzquierda(String horaCompleta){
+
+        // Como es una hora, hay que hacer split por los dos sitios
+        String[] partesHora = horaCompleta.split(":");
+        int horas = Integer.parseInt(partesHora[0]);
+        int minutos = Integer.parseInt(partesHora[1]);
+
+        if(horas >= 0 && horas <= 9){
+
+            if(minutos >= 0 && minutos <= 9){
+                return "0" + horas + ":0" + minutos;
+            }
+
+            return "0" + horas + ":" + minutos;
+        }
+
+        if(minutos >= 0 && minutos <= 9){
+            return horas + ":0" + minutos;
+        }
+
+        return horas + ":" + minutos;
     }
 }
