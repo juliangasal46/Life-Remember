@@ -411,12 +411,11 @@ public class MainActivity extends AppCompatActivity {
                 // Si está en la última posición no lo borra del array porque da un index out of bounds
                 // hay que quitarlo del array creando uno
                 if (position != RecyclerView.NO_POSITION) {
+
                     Tarea tareaEliminada = arrayTareas.get(position);
-
-                    eliminarRecordatorios(tareaEliminada);
-
-                    // Elimina el elemento del adaptador y actualiza la vista
                     adaptadorTareas.removeItem(position);
+                    eliminarRecordatorios(tareaEliminada);
+                    // Elimina el elemento del adaptador y actualiza la vista
                 }
             }
         };
@@ -508,7 +507,13 @@ public class MainActivity extends AppCompatActivity {
             } else {
                 FileOutputStream fos = openFileOutput("bbdd_almacenar_tareas.txt", Context.MODE_APPEND);
                 OutputStreamWriter osw = new OutputStreamWriter(fos);
-                osw.write("\n");
+
+                // Verificar si el archivo está vacío antes de escribir el salto de línea
+                // Porque al eliminar tarea y luego añadir una tarea, el fichero no se elimina como el caso de arriba es
+                if (fos.getChannel().size() > 0) {
+                    osw.write("\n");
+                }
+
                 osw.write(nuevaTarea.getTitulo() + "_" + nuevaTarea.getDescipcion() + "_" + nuevaTarea.getTiempo_recuerdo());
                 osw.flush();
                 osw.close();
@@ -527,50 +532,38 @@ public class MainActivity extends AppCompatActivity {
                 tarea.getDescipcion() + "_" +
                 tarea.getTiempo_recuerdo();
 
-        try {
-            FileInputStream fis = openFileInput("bbdd_almacenar_tareas.txt");
-            InputStreamReader isr = new InputStreamReader(fis);
-            BufferedReader bufrd = new BufferedReader(isr);
-
-            File tempFile = new File(getFilesDir(), "temp_bbdd_almacenar_tareas.txt");
-            FileWriter fw = new FileWriter(tempFile);
-            BufferedWriter bw = new BufferedWriter(fw);
-
-            StringBuilder stblr = new StringBuilder();
+        try (BufferedReader bufrd = new BufferedReader(new InputStreamReader(openFileInput("bbdd_almacenar_tareas.txt")));
+             BufferedWriter bw = new BufferedWriter(new FileWriter(new File(getFilesDir(), "temp_bbdd_almacenar_tareas.txt"))))
+        {
             String line;
-
             while ((line = bufrd.readLine()) != null) {
-                if (!line.equals(cadenaBuscarEnFichero)) {
-                    stblr.append(line).append("\n"); // el segundo appen da guerra
-
+                if (!(line.equals(cadenaBuscarEnFichero))) {
+                    if (bufrd.ready()) {
+                        bw.write(line + "\n");
+                    } else {
+                        bw.write(line);
+                    }
                 } else {
-                    Toast.makeText(this, line + " = " + cadenaBuscarEnFichero, Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this, "Lo he encontrado", Toast.LENGTH_SHORT).show();
                 }
             }
-
-            stblr.setLength(stblr.length() - 1); // Le quitamos 1 que sería el salto de línea que mete
-
-            bw.write(stblr.toString());
-
-            bufrd.close();
-            isr.close();
-            fis.close();
-
-            bw.flush();
-            bw.close();
-            fw.close();
 
             // Eliminamos el archivo original
             File originalFile = getFileStreamPath("bbdd_almacenar_tareas.txt");
             originalFile.delete();
 
             // Renombramos el archivo temporal al nombre original
+            File tempFile = new File(getFilesDir(), "temp_bbdd_almacenar_tareas.txt");
             tempFile.renameTo(originalFile);
 
         } catch (IOException e) {
-            Toast.makeText(MainActivity.this, e.toString(), Toast.LENGTH_SHORT).show();
+            // Manejo adecuado de la excepción (puedes registrarla, mostrar un mensaje, etc.)
+            e.printStackTrace();
+            // Toast.makeText(MainActivity.this, e.toString(), Toast.LENGTH_SHORT).show();
         }
     }
+
+
 
     private void editRecordatorios(Tarea tareaAntigua, Tarea tareaEditada) {
 
