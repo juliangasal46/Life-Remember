@@ -490,7 +490,6 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-
     public void escribirRecordatorios(Tarea nuevaTarea) {
 
         try {
