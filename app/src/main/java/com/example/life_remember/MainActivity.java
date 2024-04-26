@@ -2,21 +2,15 @@ package com.example.life_remember;
 
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
-import androidx.core.app.NotificationCompat;
-import androidx.core.app.NotificationManagerCompat;
 import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-
-import android.Manifest;
 import android.app.Activity;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
-import android.content.pm.PackageManager;
 import android.graphics.Paint;
 import android.os.Build;
 import android.os.Bundle;
@@ -29,9 +23,11 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.TimePicker;
 import android.widget.Toast;
+import android.app.AlarmManager;
 
 import java.io.*;
 import java.util.ArrayList;
+import java.util.Calendar;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -42,10 +38,15 @@ public class MainActivity extends AppCompatActivity {
     private String fechaModificada = "";
     private String fechaEditada = "";
 
+    public final static String CHANNEL_ID = "NOTIFICACION";
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        createNotificationChannel();
+
 
         datePicker = findViewById(R.id.vwDatePicker);
 
@@ -171,6 +172,8 @@ public class MainActivity extends AppCompatActivity {
                     editRecordatorios(tarea_a_editar, tarea_nueva_editada);
                     adaptadorTareas.remoteAllItems(); // Vaciamos array y por ende los recycler view elements
                     leerFicheros(); // Este ya tiene el filtrado por fecha
+
+                    lanzarNotificacion();
                 });
 
                 alertDialogBuilder_edit_chore.setNegativeButton("Cancelar", (dialogedit, whichedit) -> {
@@ -327,6 +330,11 @@ public class MainActivity extends AppCompatActivity {
                                             escribirRecordatorios(tareaNueva);
                                             adaptadorTareas.remoteAllItems(); // Vaciamos array y por ende los recycler view elements
                                             leerFicheros(); // Este ya tiene el filtrado por fecha
+
+                                            // Creamos las notificaciones
+                                            // TODO: Crear notificaciones
+
+
                                         });
 
                                         alertDialogBuilder5.setNegativeButton("Cancelar", (dialog5, which5) -> {
@@ -421,6 +429,8 @@ public class MainActivity extends AppCompatActivity {
         };
         ItemTouchHelper itemTouchHelper = new ItemTouchHelper(itemTouchCallback);
         itemTouchHelper.attachToRecyclerView(recyclerView);
+
+        lanzarNotificacion();
     }
 
 
@@ -542,8 +552,6 @@ public class MainActivity extends AppCompatActivity {
                     } else {
                         bw.write(line);
                     }
-                } else {
-                    Toast.makeText(this, "Lo he encontrado", Toast.LENGTH_SHORT).show();
                 }
             }
 
@@ -561,7 +569,6 @@ public class MainActivity extends AppCompatActivity {
             // Toast.makeText(MainActivity.this, e.toString(), Toast.LENGTH_SHORT).show();
         }
     }
-
 
 
     private void editRecordatorios(Tarea tareaAntigua, Tarea tareaEditada) {
@@ -599,5 +606,70 @@ public class MainActivity extends AppCompatActivity {
         }
 
         return horas + ":" + minutos;
+    }
+
+
+    // Funciones de las notificaciones
+    private void createNotificationChannel() {
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            CharSequence name = "CanalJulianNotis";
+            String descripcion = "El canal de notis de Julian";
+            int importance = NotificationManager.IMPORTANCE_DEFAULT;
+            NotificationChannel channel = new NotificationChannel("notifyLemubit", name, importance);
+            channel.setDescription(descripcion);
+
+            NotificationManager notificationManager = getSystemService(NotificationManager.class);
+            notificationManager.createNotificationChannel(channel);
+        }
+    }
+
+    private void scheduleNotification(int anoTraido, int mesTraido, int diaTraido,
+                                      int horaTraida, int minutoTraido, int segundoTraido, int milisegundoTraido) {
+        Calendar calendarCambiado = Calendar.getInstance();
+
+        calendarCambiado.set(Calendar.YEAR, anoTraido);
+        calendarCambiado.set(Calendar.MONTH, mesTraido - 1); // Los meses empiezan desde 0 -> Enero = 0 Febrero = 1
+        calendarCambiado.set(Calendar.DAY_OF_MONTH, diaTraido);
+        calendarCambiado.set(Calendar.HOUR_OF_DAY, horaTraida);
+        calendarCambiado.set(Calendar.MINUTE, minutoTraido);
+        calendarCambiado.set(Calendar.SECOND, segundoTraido);
+        calendarCambiado.set(Calendar.MILLISECOND, milisegundoTraido);
+
+        Intent intent = new Intent(MainActivity.this, AlarmNotification.class);
+
+        // Donde pone 0 ponía => AlarmNotification.NOTIFICATION_ID
+        PendingIntent pendingIntent_notis = PendingIntent.getBroadcast(
+                getApplicationContext(),
+                0,
+                intent,
+                PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT
+        );
+
+        AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+
+        if (alarmManager != null) {
+            alarmManager.setExact(AlarmManager.RTC_WAKEUP,
+                    calendarCambiado.getTimeInMillis()
+                    , pendingIntent_notis);
+
+        }
+    }
+    private void lanzarNotificacion(){
+
+        for(Tarea tarea : arrayTareas){
+            String fecha_split = tarea.getTiempo_recuerdo().split("-")[0];
+
+            String dia = fecha_split.split("/")[0];
+            String mes = fecha_split.split("/")[1];
+            String ano = fecha_split.split("/")[2];
+
+            String hora_edit = tarea.getTiempo_recuerdo().split("-")[1];
+            String hora = hora_edit.split(":")[0];
+            String minutos = hora_edit.split(":")[1];
+
+            scheduleNotification(Integer.parseInt(ano), Integer.parseInt(mes), Integer.parseInt(dia),
+                    Integer.parseInt(hora), Integer.parseInt(minutos), 0 ,0 );
+        }
     }
 }
