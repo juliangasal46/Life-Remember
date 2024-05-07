@@ -47,7 +47,6 @@ public class MainActivity extends AppCompatActivity {
 
         createNotificationChannel();
 
-
         datePicker = findViewById(R.id.vwDatePicker);
 
         leerFicheros();
@@ -153,7 +152,11 @@ public class MainActivity extends AppCompatActivity {
                             String formatoHora = hora_edit + ":" + minutos_edit;
                             String formatoHora_chequeado = ceroIzquierda(formatoHora);
 
-                            newEditHora.setText(formatoHora_chequeado);
+                            // TODO: Vigilar
+                            if(compararHoras(hora_edit, minutos_edit)){
+                                newEditHora.setText(formatoHora_chequeado);
+                            }
+
                         });
 
                         alertEditHora.setNegativeButton("Cancelar", (dialog5, which5) -> {
@@ -278,22 +281,27 @@ public class MainActivity extends AppCompatActivity {
                                 alertDialogBuilder3.setPositiveButton("Siguiente", (dialog3, which3) -> {
 
                                     // Quiere decir que no ha cambiado la fecha, es la del día actual
-
                                     String fechaActual = etFechaActualSistema.getText().toString();
 
                                     AlertDialog.Builder alertDialogBuilder4 = new AlertDialog.Builder(MainActivity.this);
                                     LayoutInflater inflater4 = getLayoutInflater();
                                     View dialogLayout4 = inflater4.inflate(R.layout.alert_newchore_hora, null);
+                                    TimePicker tpTimePicker = dialogLayout4.findViewById(R.id.tpTimePicker);
 
                                     alertDialogBuilder4.setPositiveButton("Ir a confirmación", (dialog4, which4) -> {
-
-                                        TimePicker tpTimePicker = dialogLayout4.findViewById(R.id.tpTimePicker);
                                         int hora = tpTimePicker.getHour();
                                         int minutos = tpTimePicker.getMinute();
-                                        String formatoHora = hora + ":" + minutos;
-                                        String hora_chequeada_ceros = ceroIzquierda(formatoHora);
+                                        String formatoHora = "";
+                                        String hora_chequeada_ceros = "";
 
-                                        Toast.makeText(MainActivity.this, hora_chequeada_ceros, Toast.LENGTH_SHORT).show();
+                                        if(!compararHoras(hora, minutos)){
+                                            Toast.makeText(MainActivity.this, "La hora puesta es más pequeña que la hora actual, cambiala a la que quieras :D", Toast.LENGTH_LONG).show();
+                                            formatoHora = "23:59";
+                                            hora_chequeada_ceros = ceroIzquierda(formatoHora);
+                                        } else {
+                                            formatoHora = hora + ":" + minutos;
+                                            hora_chequeada_ceros = ceroIzquierda(formatoHora);
+                                        }
 
                                         // Por último, antes de guardar los datos, lanzaremos un diálogo de confirmación para
                                         // el usuario , diga si quiere guardar o modificarlo de nuevo
@@ -608,6 +616,37 @@ public class MainActivity extends AppCompatActivity {
         return horas + ":" + minutos;
     }
 
+    public String cogerHoraSistema(){
+        // Cuando se crea o edita una tarea, la hora tiene que ser mayor que la hora actual
+
+        Calendar verHorasActuales = Calendar.getInstance();
+        int horaActual = verHorasActuales.getTime().getHours();
+        int minutoActual = verHorasActuales.getTime().getMinutes();
+        String minutoFormateado = "";
+
+        if(minutoActual < 10){
+            minutoFormateado = "0" + minutoActual;
+        } else {
+            minutoFormateado = Integer.toString(minutoActual);
+        }
+
+        return horaActual+":"+minutoFormateado;
+    }
+
+    public boolean compararHoras(int horaCogida, int minutoCogido){
+
+        String horaCompletaSistema = cogerHoraSistema();
+        int horaSistema = Integer.parseInt(horaCompletaSistema.split(":")[0]);
+        int minutoSistema = Integer.parseInt(horaCompletaSistema.split(":")[1]);
+
+
+        if(horaCogida < horaSistema || minutoCogido < minutoSistema){
+            Toast.makeText(this, "La hora introducida es más pequeña que la actual", Toast.LENGTH_SHORT).show();
+            return false;
+        }
+        return true;
+    }
+
 
     // Funciones de las notificaciones
     private void createNotificationChannel() {
@@ -657,6 +696,7 @@ public class MainActivity extends AppCompatActivity {
     }
     private void lanzarNotificacion(){
 
+        // Se va a comparar por hora, porque la fecha se filtra cuando se muestra
         for(Tarea tarea : arrayTareas){
             String fecha_split = tarea.getTiempo_recuerdo().split("-")[0];
 

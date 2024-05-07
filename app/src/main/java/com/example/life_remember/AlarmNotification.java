@@ -23,7 +23,7 @@ public class AlarmNotification extends BroadcastReceiver {
         // createSimpleNotification(context);
 
         NotificationCompat.Builder builder = new NotificationCompat.Builder(context, MainActivity.CHANNEL_ID)
-                .setSmallIcon(R.drawable.ic_launcher_foreground)
+                .setSmallIcon(R.drawable.vector_write)
                 .setContentTitle("Titulo")
                 .setContentText("Esto es la notificación")
                 .setPriority(Notification.PRIORITY_DEFAULT);
