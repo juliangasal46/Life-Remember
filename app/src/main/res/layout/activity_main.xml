@@ -1,67 +1,69 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
     android:background="@drawable/fondopantallamainmovil"
     tools:context=".MainActivity">
 
-    
-
-    <FrameLayout
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical">
 
-        <DatePicker
-            android:calendarTextColor="@color/white"
-            android:id="@+id/vwDatePicker"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginLeft="20dp"
-            android:layout_marginRight="20dp"
-            android:layout_marginBottom="50dp"/>
-
         <FrameLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_gravity="bottom"
-            android:layout_marginRight="20dp"
-            android:layout_marginLeft="20dp">
+            android:orientation="vertical">
 
-            <ImageView
-                android:id="@+id/imgSettings"
-                android:layout_gravity="right"
-                android:layout_width="50dp"
-                android:layout_height="50dp"
-                android:outlineProvider="background"
-                android:scaleType="centerCrop"
-                android:src="@drawable/vector_add_chore"/>
+            <DatePicker
+                android:calendarTextColor="@color/white"
+                android:id="@+id/vwDatePicker"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="20dp"
+                android:layout_marginRight="20dp"
+                android:layout_marginBottom="50dp"/>
 
-            <ImageView
-                android:id="@+id/imgAllChores"
-                android:layout_gravity="left"
-                android:layout_width="50dp"
-                android:layout_height="50dp"
-                android:outlineProvider="background"
-                android:scaleType="centerCrop"
-                android:src="@drawable/vector_all_chores"/>
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="bottom"
+                android:layout_marginRight="20dp"
+                android:layout_marginLeft="20dp">
+
+                <ImageView
+                    android:id="@+id/imgSettings"
+                    android:layout_gravity="right"
+                    android:layout_width="50dp"
+                    android:layout_height="50dp"
+                    android:outlineProvider="background"
+                    android:scaleType="centerCrop"
+                    android:src="@drawable/vector_add_chore"/>
+
+                <ImageView
+                    android:id="@+id/imgAllChores"
+                    android:layout_gravity="left"
+                    android:layout_width="50dp"
+                    android:layout_height="50dp"
+                    android:outlineProvider="background"
+                    android:scaleType="centerCrop"
+                    android:src="@drawable/vector_all_chores"/>
+            </FrameLayout>
         </FrameLayout>
-    </FrameLayout>
 
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_marginTop="20dp">
-
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/vwRecyclerView"
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_marginLeft="20dp"
-            android:layout_marginRight="20dp"/>
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp">
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/vwRecyclerView"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_marginLeft="20dp"
+                android:layout_marginRight="20dp"/>
+        </LinearLayout>
     </LinearLayout>
-</LinearLayout>
+</ScrollView>
