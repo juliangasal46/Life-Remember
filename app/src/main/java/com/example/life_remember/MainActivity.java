@@ -45,8 +45,6 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        createNotificationChannel();
-
         datePicker = findViewById(R.id.vwDatePicker);
 
         leerFicheros();
@@ -175,8 +173,6 @@ public class MainActivity extends AppCompatActivity {
                     editRecordatorios(tarea_a_editar, tarea_nueva_editada);
                     adaptadorTareas.remoteAllItems(); // Vaciamos array y por ende los recycler view elements
                     leerFicheros(); // Este ya tiene el filtrado por fecha
-
-                    lanzarNotificacion();
                 });
 
                 alertDialogBuilder_edit_chore.setNegativeButton("Cancelar", (dialogedit, whichedit) -> {
@@ -341,7 +337,8 @@ public class MainActivity extends AppCompatActivity {
 
                                             // Creamos las notificaciones
                                             // TODO: Crear notificaciones
-
+                                            lanzarNotificacion();
+                                            Toast.makeText(MainActivity.this, "La notificación se ha creado", Toast.LENGTH_SHORT).show();
 
                                         });
 
@@ -438,7 +435,6 @@ public class MainActivity extends AppCompatActivity {
         ItemTouchHelper itemTouchHelper = new ItemTouchHelper(itemTouchCallback);
         itemTouchHelper.attachToRecyclerView(recyclerView);
 
-        lanzarNotificacion();
     }
 
 
@@ -516,6 +512,8 @@ public class MainActivity extends AppCompatActivity {
             // if existe -> no lo crees escribe en la siguiente línea, else crealo
             // EL FORMATO SERÁ -> TITULO_DESC_FECHARECORDAR <- Lo guarda por lineas entonces no hace falta simbolo al final
             if (!(chequearExistenciaFichero(archivos, "bbdd_almacenar_tareas.txt"))) {
+                // TODO: Comprobar existencia de channel
+                createNotificationChannel(); // Si no existe fichero == Primera apertura del programa
                 // Mode private es para que solo esta función pueda acceder a ese fichero de forma escritura
                 OutputStreamWriter osw = new OutputStreamWriter(openFileOutput("bbdd_almacenar_tareas.txt", Activity.MODE_PRIVATE));
                 osw.write(nuevaTarea.getTitulo() + "_" + nuevaTarea.getDescipcion() + "_" + nuevaTarea.getTiempo_recuerdo());
@@ -650,7 +648,6 @@ public class MainActivity extends AppCompatActivity {
 
     // Funciones de las notificaciones
     private void createNotificationChannel() {
-
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             CharSequence name = "CanalJulianNotis";
             String descripcion = "El canal de notis de Julian";
@@ -710,6 +707,7 @@ public class MainActivity extends AppCompatActivity {
 
             scheduleNotification(Integer.parseInt(ano), Integer.parseInt(mes), Integer.parseInt(dia),
                     Integer.parseInt(hora), Integer.parseInt(minutos), 0 ,0 );
+
         }
     }
 }

@@ -1,5 +1,6 @@
 package com.example.life_remember;
 
+import android.annotation.SuppressLint;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -18,23 +19,21 @@ public class AlarmNotification extends BroadcastReceiver {
     public static final int NOTIFICATION_ID = 1;
 
 
+    @SuppressLint("MissingPermission")
     @Override
     public void onReceive(Context context, Intent intent) {
-        // createSimpleNotification(context);
-
-        NotificationCompat.Builder builder = new NotificationCompat.Builder(context, MainActivity.CHANNEL_ID)
-                .setSmallIcon(R.drawable.vector_write)
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(context, "notifyLemubit")
+                .setSmallIcon(R.drawable.ic_launcher_background)
                 .setContentTitle("Titulo")
                 .setContentText("Esto es la notificación")
                 .setPriority(Notification.PRIORITY_DEFAULT);
 
         NotificationManagerCompat notificationManagerCompat = NotificationManagerCompat.from(context);
         notificationManagerCompat.notify(200, builder.build()); // 200 es un número único, quiza le modifiquemos
+
     }
 
     private void createSimpleNotification(Context context) {
-
-        Toast.makeText(context, "Llega al create simple noti", Toast.LENGTH_SHORT).show();
 
         Intent intent = new Intent(context, MainActivity.class);
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
@@ -43,7 +42,7 @@ public class AlarmNotification extends BroadcastReceiver {
         PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, intent, flag);
 
         NotificationCompat.Builder builder = new NotificationCompat.Builder(context, MainActivity.CHANNEL_ID)
-                .setSmallIcon(android.R.drawable.ic_delete) 
+                .setSmallIcon(android.R.drawable.ic_delete)
                 .setContentTitle("My title")
                 .setContentText("Esto es un ejemplo <3")
                 .setStyle(new NotificationCompat.BigTextStyle()

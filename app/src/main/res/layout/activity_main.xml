@@ -5,7 +5,10 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
+    android:background="@drawable/fondopantallamainmovil"
     tools:context=".MainActivity">
+
+    
 
     <FrameLayout
         android:layout_width="match_parent"
@@ -13,13 +16,13 @@
         android:orientation="vertical">
 
         <DatePicker
+            android:calendarTextColor="@color/white"
             android:id="@+id/vwDatePicker"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginLeft="20dp"
             android:layout_marginRight="20dp"
-            android:datePickerMode="spinner"
-            android:spinnersShown="false" />
+            android:layout_marginBottom="50dp"/>
 
         <FrameLayout
             android:layout_width="match_parent"
